@@ -1,1 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Randomizer Pro</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body class="light-theme">
+    <header>
+        <div class="logo">
+            <h1>Randomizer<span>Pro</span></h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#" class="active">Home</a></li>
+                <li><a href="#" id="history-link">History</a></li>
+                <li><a href="#" id="settings-link">Settings</a></li>
+            </ul>
+        </nav>
+        <div class="user-controls">
+            <button id="theme-toggle" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+            <div id="user-profile" class="hidden">
+                <img src="" alt="Profile" id="profile-image">
+                <span id="user-name"></span>
+                <button id="logout-button">Logout</button>
+            </div>
+            <div id="login-container">
+                <div id="g_id_onload"
+                    data-client_id="YOUR_GOOGLE_CLIENT_ID"
+                    data-context="signin"
+                    data-ux_mode="popup"
+                    data-callback="handleCredentialResponse">
+                </div>
+                <div class="g_id_signin"
+                    data-type="standard"
+                    data-shape="rectangular"
+                    data-theme="outline"
+                    data-text="signin_with"
+                    data-size="large"
+                    data-logo_alignment="left">
+                </div>
+            </div>
+        </div>
+    </header>
 
+    <main>
+        <!-- Home Section (Randomizer Interface) -->
+        <section id="randomizer-section" class="active-section">
+            <div class="container">
+                <h2>Create Your Randomization</h2>
+                
+                <div class="input-type-selector">
+                    <button class="input-type-btn active" data-type="text">Text</button>
+                    <button class="input-type-btn" data-type="number">Numbers</button>
+                    <button class="input-type-btn" data-type="image">Images</button>
+                    <button class="input-type-btn" data-type="mixed">Mixed</button>
+                </div>
+                
+                <div class="input-container">
+                    <!-- Text Input Panel (Default active) -->
+                    <div id="text-input-panel" class="input-panel active">
+                        <div class="input-instructions">
+                            <p>Enter text items (one per line or comma-separated)</p>
+                        </div>
+                        <textarea id="text-input" placeholder="Item 1, Item 2, Item 3..."></textarea>
+                        <button id="parse-text-btn" class="action-btn">Parse Items</button>
+                    </div>
+                    
+                    <!-- Number Input Panel -->
+                    <div id="number-input-panel" class="input-panel">
+                        <div class="input-instructions">
+                            <p>Select a range or enter individual numbers</p>
+                        </div>
+                        <div class="number-range">
+                            <div class="range-input">
+                                <label for="range-start">From:</label>
+                                <input type="number" id="range-start" value="1">
+                            </div>
+                            <div class="range-input">
+                                <label for="range-end">To:</label>
+                                <input type="number" id="range-end" value="100">
+                            </div>
+                        </div>
+                        <div class="individual-numbers">
+                            <label for="individual-nums">Or enter individual numbers (comma-separated):</label>
+                            <input type="text" id="individual-nums" placeholder="5, 10, 15, 20...">
+                        </div>
+                        <button id="parse-numbers-btn" class="action-btn">Parse Numbers</button>
+                    </div>
+                    
+                    <!-- Image Input Panel -->
+                    <div id="image-input-panel" class="input-panel">
+                        <div class="input-instructions">
+                            <p>Upload images to include in randomization</p>
+                        </div>
+                        <div class="image-upload-area">
+                            <label for="image-upload" class="upload-label">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Drop images here or click to upload</span>
+                            </label>
+                            <input type="file" id="image-upload" accept="image/*" multiple>
+                        </div>
+                        <div id="image-preview-container" class="image-preview-container"></div>
+                    </div>
+                    
+                    <!-- Mixed Input Panel -->
+                    <div id="mixed-input-panel" class="input-panel">
+                        <div class="input-instructions">
+                            <p>Add different types of items for mixed randomization</p>
+                        </div>
+                        <div class="mixed-input-controls">
+                            <div class="mixed-text-input">
+                                <input type="text" id="mixed-text-item" placeholder="Add text item">
+                                <button id="add-text-item" class="small-btn">Add</button>
+                            </div>
+                            <div class="mixed-number-input">
+                                <input type="number" id="mixed-number-item" placeholder="Add number">
+                                <button id="add-number-item" class="small-btn">Add</button>
+                            </div>
+                            <div class="mixed-image-input">
+                                <label for="mixed-image-upload" class="upload-small-label">Upload Image</label>
+                                <input type="file" id="mixed-image-upload" accept="image/*">
+                            </div>
+                        </div>
+                        <div id="mixed-items-container" class="mixed-items-container"></div>
+                    </div>
+                </div>
+                
+                <div class="parsed-items-container hidden" id="parsed-items-container">
+                    <h3>Items to Randomize (<span id="items-count">0</span>)</h3>
+                    <div id="parsed-items-list" class="parsed-items-list"></div>
+                    <button id="clear-items-btn" class="text-btn">Clear All</button>
+                </div>
+                
+                <div class="randomization-options">
+                    <h3>Randomization Options</h3>
+                    <div class="options-grid">
+                        <div class="option-group">
+                            <label for="selection-count">Items to select:</label>
+                            <input type="number" id="selection-count" min="1" value="1">
+                        </div>
+                        <div class="option-group checkbox">
+                            <input type="checkbox" id="allow-duplicates">
+                            <label for="allow-duplicates">Allow duplicates</label>
+                        </div>
+                        <div class="option-group">
+                            <label for="animation-speed">Animation speed:</label>
+                            <select id="animation-speed">
+                                <option value="fast">Fast</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="slow">Slow</option>
+                            </select>
+                        </div>
+                        <div class="option-group checkbox">
+                            <input type="checkbox" id="save-history" checked>
+                            <label for="save-history">Save to history</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-container">
+                    <button id="randomize-btn" class="primary-btn" disabled>Randomize!</button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Results Modal -->
+        <div id="results-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Your Random Selection</h2>
+                    <button class="close-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="animation-container" class="animation-container">
+                        <!-- Animation will be inserted here -->
+                    </div>
+                    <div id="results-container" class="results-container hidden">
+                        <!-- Results will be inserted here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="randomize-again-btn" class="secondary-btn">Randomize Again</button>
+                    <button id="save-results-btn" class="primary-btn">Save Results</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- History Section -->
+        <section id="history-section" class="section">
+            <div class="container">
+                <h2>Your Randomization History</h2>
+                <div class="auth-required-message" id="history-auth-message">
+                    <i class="fas fa-lock"></i>
+                    <p>Please sign in to view your randomization history</p>
+                </div>
+                <div id="history-content" class="history-content hidden">
+                    <div class="history-filters">
+                        <input type="text" id="history-search" placeholder="Search history...">
+                        <select id="history-sort">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                        </select>
+                    </div>
+                    <div id="history-list" class="history-list">
+                        <!-- History items will be inserted here -->
+                    </div>
+                    <div id="history-empty" class="empty-state">
+                        <i class="fas fa-history"></i>
+                        <p>Your randomization history will appear here</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Settings Section -->
+        <section id="settings-section" class="section">
+            <div class="container">
+                <h2>Settings</h2>
+                <div class="settings-container">
+                    <div class="setting-group">
+                        <h3>Appearance</h3>
+                        <div class="setting-item">
+                            <span>Theme</span>
+                            <div class="theme-selector">
+                                <button class="theme-btn" data-theme="light">Light</button>
+                                <button class="theme-btn" data-theme="dark">Dark</button>
+                                <button class="theme-btn" data-theme="system">System</button>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <span>Animation Style</span>
+                            <select id="animation-style">
+                                <option value="shuffle">Shuffle</option>
+                                <option value="fade">Fade</option>
+                                <option value="spin">Spin</option>
+                                <option value="cascade">Cascade</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <h3>Account</h3>
+                        <div class="auth-required-message" id="settings-auth-message">
+                            <i class="fas fa-lock"></i>
+                            <p>Please sign in to access account settings</p>
+                        </div>
+                        <div id="account-settings" class="account-settings hidden">
+                            <div class="setting-item">
+                                <span>Auto-save randomizations</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="auto-save-setting" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <span>Clear all history</span>
+                                <button id="clear-history-btn" class="danger-btn">Clear</button>
+                            </div>
+                            <div class="setting-item">
+                                <span>Export data</span>
+                                <button id="export-data-btn" class="secondary-btn">Export</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <h3>Advanced</h3>
+                        <div class="setting-item">
+                            <span>Max items</span>
+                            <input type="number" id="max-items-setting" min="10" max="200" value="200">
+                        </div>
+                        <div class="setting-item">
+                            <span>Image compression</span>
+                            <select id="image-compression">
+                                <option value="high">High Quality</option>
+                                <option value="medium" selected>Medium Quality</option>
+                                <option value="low">Low Quality</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <span>Confirm before clearing</span>
+                            <label class="switch">
+                                <input type="checkbox" id="confirm-clear-setting" checked>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Confirmation Dialog -->
+    <div id="confirm-dialog" class="dialog">
+        <div class="dialog-content">
+            <h3 id="confirm-title">Confirmation</h3>
+            <p id="confirm-message">Are you sure you want to continue?</p>
+            <div class="dialog-buttons">
+                <button id="cancel-btn" class="secondary-btn">Cancel</button>
+                <button id="confirm-btn" class="primary-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <footer>
+        <p>&copy; 2025 Randomizer Pro. All rights reserved.</p>
+    </footer>
+
+    <script src="scripts.js"></script>
+</body>
+</html>
